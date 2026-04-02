@@ -1,160 +1,159 @@
 # RightClickHero
 
-A macOS Finder right-click menu enhancement app built with Swift, similar to 赤友右键超人. Adds 14+ productivity features directly to your right-click context menu.
+用 Swift 打造的 macOS Finder 右鍵選單增強工具，功能類似赤友右键超人。直接在右鍵選單中新增 14+ 項實用功能。
 
-## Features
+## 功能列表
 
-| Feature | Description |
-|---------|-------------|
-| New File | Create .txt, .md, .swift, .py, .json, .html, .docx and more |
-| Cut / Paste | Move files (fills macOS's missing cut shortcut) |
-| Copy Path | Copy full file path to clipboard |
-| Convert Image | JPG ↔ PNG ↔ WebP ↔ HEIC (macOS 11+ native, no dependencies) |
-| AirDrop | Share files via AirDrop directly from right-click |
-| Hide / Show | Toggle file hidden attribute |
-| Permanent Delete | Delete without going to Trash (with confirmation) |
-| Compress | ZIP archive (plain or AES-256 encrypted) |
-| Move to Folder | Move files to any location |
-| Copy to Folder | Copy files to any location |
-| Open With | Choose which app opens the file |
-| Disk Analyzer | Visual breakdown of folder sizes |
-| Duplicate Finder | Find and delete duplicate files (SHA-256) |
-| Screenshot | Capture screen via ScreenCaptureKit |
+| 功能 | 說明 |
+|------|------|
+| 新建文件 | 建立 .txt、.md、.swift、.py、.json、.html、.docx 等格式 |
+| 剪切 / 貼上 | 移動檔案（補齊 macOS 缺少的剪切功能） |
+| 複製路徑 | 將完整檔案路徑複製到剪貼板 |
+| 圖片格式轉換 | JPG ↔ PNG ↔ WebP ↔ HEIC（macOS 11+ 原生支援，無需第三方套件） |
+| 隔空投送 | 直接從右鍵選單透過 AirDrop 分享檔案 |
+| 隱藏 / 顯示 | 切換檔案的隱藏屬性 |
+| 徹底刪除 | 不移至垃圾桶直接刪除（含確認提示） |
+| 壓縮 | 建立 ZIP 壓縮檔（支援 AES-256 加密） |
+| 移動到資料夾 | 將檔案移動到任意位置 |
+| 複製到資料夾 | 將檔案複製到任意位置 |
+| 以指定 App 開啟 | 選擇要用哪個 App 開啟檔案 |
+| 磁盤空間分析 | 以視覺化方式顯示各資料夾佔用空間 |
+| 重複文件偵測 | 找出並刪除重複檔案（SHA-256 比對） |
+| 截圖 | 透過 ScreenCaptureKit 擷取螢幕畫面 |
 
-## Architecture
+## 架構說明
 
 ```
 RightClickHero.xcodeproj
-├── RightClickHero/            Main app — SwiftUI settings UI
-├── RightClickHeroFinderExt/   Finder Sync Extension — injects the menu
-├── RightClickHeroHelper/      XPC Login Item — executes file operations
-└── RightClickHeroKit/         Shared Swift package (features + XPC protocol)
+├── RightClickHero/            主 App — SwiftUI 設定介面
+├── RightClickHeroFinderExt/   Finder Sync Extension — 注入右鍵選單
+├── RightClickHeroHelper/      XPC Login Item — 執行實際的檔案操作
+└── RightClickHeroKit/         共用 Swift Package（功能邏輯 + XPC 協定）
 ```
 
-The Finder extension is sandboxed and cannot perform file operations directly.
-It encodes selected URLs as security-scoped bookmarks and sends them to the
-Helper via XPC. The Helper resolves the bookmarks and performs the operation.
+Finder Extension 受沙盒限制，無法直接執行檔案操作。它會將選取的 URL 編碼為 Security-Scoped Bookmark，透過 XPC 傳送給 Helper，由 Helper 解析並執行操作。
 
-## Requirements
+## 系統需求
 
-- macOS 12 Monterey or later
-- Xcode 15 or later
-- Apple Developer account (for entitlements / signing)
+- macOS 12 Monterey 或更新版本
+- Xcode 15 或更新版本
+- Apple Developer 帳號（用於 Entitlements / 簽署）
 
-## Setup in Xcode
+## Xcode 專案設定步驟
 
-### 1. Create the Xcode project
+### 1. 建立 Xcode 專案
 
-1. Open Xcode → **File › New › Project**
-2. Choose **macOS › App**, name it `RightClickHero`
-3. Bundle ID: `com.yourco.RightClickHero`
-4. Language: Swift, Interface: SwiftUI
-5. Replace generated files with the ones in `RightClickHero/`
+1. 開啟 Xcode → **File › New › Project**
+2. 選擇 **macOS › App**，名稱填 `RightClickHero`
+3. Bundle ID：`com.yourco.RightClickHero`
+4. 語言：Swift，介面：SwiftUI
+5. 將產生的預設檔案替換為 `RightClickHero/` 目錄中的檔案
 
-### 2. Add the Finder Sync Extension target
+### 2. 新增 Finder Sync Extension Target
 
 1. **File › New › Target › macOS › Finder Extension**
-2. Name: `RightClickHeroFinderExt`, Bundle ID: `com.yourco.RightClickHero.FinderExt`
-3. Replace generated files with the ones in `RightClickHeroFinderExt/`
-4. Set the extension's `Info.plist` from `RightClickHeroFinderExt/Info.plist`
+2. 名稱：`RightClickHeroFinderExt`，Bundle ID：`com.yourco.RightClickHero.FinderExt`
+3. 將產生的檔案替換為 `RightClickHeroFinderExt/` 中的檔案
+4. 使用 `RightClickHeroFinderExt/Info.plist` 設定 Extension 的 Info.plist
 
-### 3. Add the XPC Helper target
+### 3. 新增 XPC Helper Target
 
 1. **File › New › Target › macOS › Command Line Tool**
-2. Name: `RightClickHeroHelper`, Bundle ID: `com.yourco.RightClickHeroHelper`
-3. Replace `main.swift` and add other files from `RightClickHeroHelper/`
-4. In **Build Phases**, add a **Copy Files** phase to the main app target:
-   - Destination: `Wrapper`
-   - Subpath: `Contents/Library/LoginItems`
-   - Add `RightClickHeroHelper.app`
+2. 名稱：`RightClickHeroHelper`，Bundle ID：`com.yourco.RightClickHeroHelper`
+3. 替換 `main.swift` 並加入 `RightClickHeroHelper/` 中的其他檔案
+4. 在主 App Target 的 **Build Phases** 中新增 **Copy Files** 階段：
+   - Destination：`Wrapper`
+   - Subpath：`Contents/Library/LoginItems`
+   - 加入 `RightClickHeroHelper.app`
 
-### 4. Add RightClickHeroKit as a local package
+### 4. 新增 RightClickHeroKit 本地套件
 
 1. **File › Add Package Dependencies › Add Local…**
-2. Select the `RightClickHeroKit/` directory
-3. Add `RightClickHeroKit` library to all three targets
+2. 選擇 `RightClickHeroKit/` 目錄
+3. 將 `RightClickHeroKit` 函式庫加入三個 Target
 
-### 5. Configure Capabilities
+### 5. 設定 Capabilities
 
-For each target, open **Signing & Capabilities** and add:
+對每個 Target，開啟 **Signing & Capabilities** 並依下方設定：
 
-**Main App (`RightClickHero`)**
+**主 App（`RightClickHero`）**
 - App Sandbox ✓
 - App Groups → `group.com.yourco.rightclickhero`
-- User Selected File (Read/Write)
-- Network (Outgoing Connections)
-- Screen Recording (add via entitlements key)
+- User Selected File（Read/Write）
+- Network（Outgoing Connections）
+- Screen Recording（透過 entitlements key 新增）
 
-**Finder Extension (`RightClickHeroFinderExt`)**
+**Finder Extension（`RightClickHeroFinderExt`）**
 - App Sandbox ✓
 - App Groups → `group.com.yourco.rightclickhero`
 
-**Helper (`RightClickHeroHelper`)**
+**Helper（`RightClickHeroHelper`）**
 - App Sandbox ✓
 - App Groups → `group.com.yourco.rightclickhero`
-- User Selected File (Read/Write)
+- User Selected File（Read/Write）
 
-Use the provided `.entitlements` files as reference.
+各 `.entitlements` 檔案可作為參考。
 
-### 6. Replace bundle IDs
+### 6. 替換 Bundle ID
 
-Replace `com.yourco` throughout all files with your actual reverse-domain identifier.
+將所有檔案中的 `com.yourco` 替換為你自己的 reverse-domain 識別碼：
 
 ```bash
 find . -type f \( -name "*.swift" -o -name "*.plist" -o -name "*.entitlements" \) \
   -exec sed -i '' 's/com\.yourco/com.YOURTEAM/g' {} +
 ```
 
-### 7. Build and run
+### 7. 建置與執行
 
-1. Select the `RightClickHero` scheme and run
-2. On first launch, the Helper is registered via `SMAppService`
-3. Enable the extension: **System Settings › Privacy & Security › Extensions › Finder Extensions**
-4. Right-click any file in Finder to see the menu
+1. 選擇 `RightClickHero` scheme 並執行
+2. 首次啟動時，Helper 會透過 `SMAppService` 自動注冊
+3. 啟用 Extension：**系統設定 › 隱私權與安全性 › 延伸功能 › Finder 延伸功能**
+4. 在 Finder 中對任意檔案按右鍵即可看到選單
 
-## File Structure
+## 檔案結構
 
 ```
 RightClickHeroKit/
 └── Sources/RightClickHeroKit/
-    ├── XPCServiceProtocol.swift   # Shared XPC protocol + constants
-    ├── ActionRequest.swift        # ActionType enum, request/response models
-    ├── BookmarkHelper.swift       # Security-scoped bookmark utilities
-    ├── SharedDefaults.swift       # App Group UserDefaults accessors
-    ├── ImageConverter.swift       # CIImage + ImageIO image conversion
-    ├── DiskScanner.swift          # Recursive disk usage scanner
-    ├── DuplicateDetector.swift    # Size grouping + SHA-256 duplicate finder
-    ├── ArchiveManager.swift       # ZIP + encrypted ZIP via ZipArchive
-    └── FileTemplateManager.swift  # New file templates
+    ├── XPCServiceProtocol.swift   # 共用 XPC 協定 + 常數定義
+    ├── ActionRequest.swift        # ActionType 列舉、請求/回應模型
+    ├── BookmarkHelper.swift       # Security-scoped bookmark 工具
+    ├── SharedDefaults.swift       # App Group UserDefaults 存取器
+    ├── ImageConverter.swift       # CIImage + ImageIO 圖片轉換
+    ├── DiskScanner.swift          # 遞迴磁盤空間掃描器
+    ├── DuplicateDetector.swift    # 大小分組 + SHA-256 重複偵測
+    ├── ArchiveManager.swift       # ZIP + 加密 ZIP（ZipArchive）
+    └── FileTemplateManager.swift  # 新建文件模板管理
 
 RightClickHeroFinderExt/
-├── FinderSyncExtension.swift      # FIFinderSync subclass — menu(for:)
-├── MenuBuilder.swift              # Builds NSMenu from enabled features
-└── XPCClient.swift                # NSXPCConnection to helper
+├── FinderSyncExtension.swift      # FIFinderSync 子類別 — menu(for:)
+├── MenuBuilder.swift              # 從啟用功能清單動態建立 NSMenu
+└── XPCClient.swift                # 連接 Helper 的 NSXPCConnection
 
 RightClickHeroHelper/
-├── main.swift                     # NSXPCListener entry point
-├── HelperXPCDelegate.swift        # Accepts XPC connections
-├── ActionDispatcher.swift         # Routes requests to feature handlers
+├── main.swift                     # NSXPCListener 入口點
+├── HelperXPCDelegate.swift        # 接受 XPC 連線
+├── ActionDispatcher.swift         # 將請求路由到各功能處理器
 └── FileOperations.swift           # FileManager + NSFileCoordinator
 
 RightClickHero/
-├── App/RightClickHeroApp.swift    # @main + SMAppService registration
-├── App/AppDelegate.swift          # Notification listeners
-├── UI/SettingsView.swift          # Main settings window
-├── UI/MenuItemsSettingsView.swift # Feature toggle list
-├── UI/DiskAnalyzerView.swift      # Disk usage UI
-├── UI/DuplicateFinderView.swift   # Duplicate files UI
+├── App/RightClickHeroApp.swift    # @main + SMAppService 注冊
+├── App/AppDelegate.swift          # 通知監聽器
+├── UI/SettingsView.swift          # 主設定視窗
+├── UI/MenuItemsSettingsView.swift # 功能開關清單
+├── UI/DiskAnalyzerView.swift      # 磁盤空間視覺化介面
+├── UI/DuplicateFinderView.swift   # 重複文件管理介面
 ├── Features/AirDropCoordinator.swift
 └── Features/ScreenCaptureCoordinator.swift
 ```
 
-## Notes
+## 注意事項
 
-- **App Uninstaller** is not included because it requires disabling the sandbox,
-  which is incompatible with Mac App Store distribution.
-- **Screenshot** requires user authorization in System Settings › Privacy › Screen Recording.
-- **AirDrop** must be triggered from the main app process (not the extension).
-  The extension notifies the main app via Darwin notification.
-- On macOS 15.0/15.1 there is a known regression with Finder extension management UI
-  (fixed in 15.2). Use `pluginkit -e use -i com.yourco.RightClickHero.FinderExt` as a workaround.
+- **軟體卸載功能** 未包含在此版本，因為該功能需要停用沙盒，與 Mac App Store 發行規範不相容。
+- **截圖功能** 需要用戶在「系統設定 › 隱私權 › 螢幕錄製」中手動授權。
+- **AirDrop** 必須從主 App 程序觸發（不能直接在 Extension 中呼叫）。Extension 透過 Darwin 通知告知主 App 顯示選取器。
+- macOS 15.0/15.1 有已知的 Finder Extension 管理介面問題（15.2 已修復）。若遇到此問題，可使用以下指令作為暫時解法：
+
+```bash
+pluginkit -e use -i com.yourco.RightClickHero.FinderExt
+```
