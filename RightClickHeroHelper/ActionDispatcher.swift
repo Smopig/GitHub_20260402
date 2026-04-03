@@ -165,7 +165,11 @@ import RightClickHeroKit
         if encrypted {
             let password = req.parameters["password"] ?? ""
             guard !password.isEmpty else { return .failure("Password required for encrypted archive") }
-            try ArchiveManager.zipEncrypted(sources: sources, destination: dest, password: password)
+            if #available(macOS 12.0, *) {
+                try ArchiveManager.encryptedArchive(sources: sources, destination: dest, password: password)
+            } else {
+                return .failure("Encrypted archive requires macOS 12 or later")
+            }
         } else {
             try ArchiveManager.zip(sources: sources, destination: dest)
         }
