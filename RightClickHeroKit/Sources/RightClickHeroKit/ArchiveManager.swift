@@ -103,8 +103,9 @@ public enum ArchiveManager {
         var coordinatorError: NSError?
         let coordinator = NSFileCoordinator()
         let intent = NSFileAccessIntent.readingIntent(with: source, options: .forUploading)
+        let queue = OperationQueue()
 
-        coordinator.coordinate(with: [intent], queue: .global()) { error in
+        coordinator.coordinate(with: [intent], queue: queue) { error in
             if let error {
                 coordinatorError = error as NSError
                 return
@@ -118,6 +119,9 @@ public enum ArchiveManager {
                 coordinatorError = error as NSError
             }
         }
+
+        // Wait for the async coordinator to finish
+        queue.waitUntilAllOperationsAreFinished()
 
         if let err = coordinatorError { throw err }
     }

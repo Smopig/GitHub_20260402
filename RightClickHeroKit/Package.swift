@@ -10,10 +10,7 @@ let package = Package(
     targets: [
         .target(
             name: "RightClickHeroKit",
-            path: "Sources/RightClickHeroKit",
-            resources: [
-                .copy("FileTemplates"),
-            ]
+            path: "Sources/RightClickHeroKit"
         ),
     ]
 )
