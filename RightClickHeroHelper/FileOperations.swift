@@ -29,8 +29,8 @@ final class FileOperations {
         ) { srcURL, destURL in
             do {
                 try FileManager.default.moveItem(at: srcURL, to: destURL)
-            } catch {
-                coordError = error as NSError
+            } catch let err as NSError {
+                coordError = err
             }
         }
         if let err = coordError { throw err }
@@ -47,8 +47,8 @@ final class FileOperations {
         ) { srcURL, destURL in
             do {
                 try FileManager.default.copyItem(at: srcURL, to: destURL)
-            } catch {
-                coordError = error as NSError
+            } catch let err as NSError {
+                coordError = err
             }
         }
         if let err = coordError { throw err }
