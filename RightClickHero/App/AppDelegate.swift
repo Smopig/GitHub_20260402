@@ -17,8 +17,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     // MARK: - Helper registration
 
     private func registerHelperLoginItem() {
+        let helperID = BundleConfig.helperBundleIdentifier
         if #available(macOS 13.0, *) {
-            let service = SMAppService.loginItem(identifier: "com.yourco.RightClickHeroHelper")
+            let service = SMAppService.loginItem(identifier: helperID)
             do {
                 if service.status == .notRegistered {
                     try service.register()
@@ -27,8 +28,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 NSLog("[RCH] Failed to register helper: \(error)")
             }
         } else {
-            // Fallback for macOS 12
-            SMLoginItemSetEnabled("com.yourco.RightClickHeroHelper" as CFString, true)
+            SMLoginItemSetEnabled(helperID as CFString, true)
         }
     }
 
@@ -38,7 +38,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         DistributedNotificationCenter.default().addObserver(
             self,
             selector: #selector(showAirDrop),
-            name: NSNotification.Name("com.yourco.rightclickhero.showAirDrop"),
+            name: NSNotification.Name(BundleConfig.airDropNotificationName),
             object: nil
         )
     }

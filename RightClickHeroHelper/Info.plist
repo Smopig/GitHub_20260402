@@ -5,26 +5,41 @@
     <key>CFBundleDisplayName</key>
     <string>RightClickHeroHelper</string>
     <key>CFBundleIdentifier</key>
-    <string>com.yourco.RightClickHeroHelper</string>
+    <string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+    <key>CFBundleExecutable</key>
+    <string>$(EXECUTABLE_NAME)</string>
     <key>CFBundleName</key>
-    <string>RightClickHeroHelper</string>
+    <string>$(PRODUCT_NAME)</string>
     <key>CFBundleVersion</key>
-    <string>1</string>
+    <string>$(CURRENT_PROJECT_VERSION)</string>
     <key>CFBundleShortVersionString</key>
-    <string>1.0.0</string>
+    <string>$(MARKETING_VERSION)</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
+    <key>LSMinimumSystemVersion</key>
+    <string>$(MACOSX_DEPLOYMENT_TARGET)</string>
 
-    <!-- Run as a background-only agent (no Dock icon, no menu bar) -->
+    <!-- Background-only login item: no Dock icon, no menu bar -->
     <key>LSBackgroundOnly</key>
     <true/>
     <key>LSUIElement</key>
     <true/>
-    <key>LSMinimumSystemVersion</key>
-    <string>12.0</string>
 
-    <!-- Mach service name must match kHelperMachServiceName in XPCServiceProtocol.swift -->
-    <key>SMPrivilegedExecutables</key>
-    <dict/>
+    <!-- Runtime configuration consumed by RightClickHeroKit.BundleConfig -->
+    <key>AppGroupIdentifier</key>
+    <string>group.$(BUNDLE_PREFIX).rightclickhero</string>
+    <key>HelperBundleIdentifier</key>
+    <string>$(BUNDLE_PREFIX).RightClickHero.Helper</string>
+    <key>HelperMachServiceName</key>
+    <string>$(BUNDLE_PREFIX).RightClickHero.Helper</string>
+    <key>AirDropNotificationName</key>
+    <string>$(BUNDLE_PREFIX).rightclickhero.showAirDrop</string>
+
+    <!-- Mach service exposed to the Finder Extension over XPC -->
+    <key>MachServices</key>
+    <dict>
+        <key>$(BUNDLE_PREFIX).RightClickHero.Helper</key>
+        <true/>
+    </dict>
 </dict>
 </plist>

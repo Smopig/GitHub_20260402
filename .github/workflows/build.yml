@@ -1,0 +1,64 @@
+name: Build macOS app
+
+on:
+  push:
+    branches: [main, "claude/**"]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-14
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Show toolchain
+        run: |
+          sw_vers
+          xcodebuild -version
+          swift --version
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode project
+        run: xcodegen generate
+
+      # CI builds are unsigned ("Sign to Run Locally" / ad-hoc).
+      # That's enough to verify the project compiles and links.
+      # For a signed/notarized build you need a real Developer ID — out of scope here.
+      - name: Build (Debug, unsigned)
+        run: |
+          xcodebuild \
+            -project RightClickHero.xcodeproj \
+            -scheme RightClickHero \
+            -configuration Debug \
+            -derivedDataPath build/DerivedData \
+            CODE_SIGN_IDENTITY="-" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            build
+
+      - name: Locate built app
+        id: locate
+        run: |
+          APP_PATH=$(find build/DerivedData/Build/Products/Debug -maxdepth 2 -name "RightClickHero.app" -type d | head -n1)
+          echo "app_path=$APP_PATH" >> "$GITHUB_OUTPUT"
+          ls -la "$APP_PATH" || true
+
+      - name: Package zip
+        if: steps.locate.outputs.app_path != ''
+        run: |
+          cd "$(dirname "${{ steps.locate.outputs.app_path }}")"
+          zip -ry "$GITHUB_WORKSPACE/RightClickHero-unsigned.zip" "RightClickHero.app"
+
+      - name: Upload artifact
+        if: steps.locate.outputs.app_path != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: RightClickHero-unsigned-${{ github.sha }}
+          path: RightClickHero-unsigned.zip
+          if-no-files-found: error
+          retention-days: 14

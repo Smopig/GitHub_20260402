@@ -1,0 +1,128 @@
+name: RightClickHero
+options:
+  bundleIdPrefix: $(BUNDLE_PREFIX)
+  deploymentTarget:
+    macOS: "12.0"
+  createIntermediateGroups: true
+  generateEmptyDirectories: true
+  groupSortPosition: top
+  xcodeVersion: "15.0"
+
+configFiles:
+  Debug: Config.xcconfig
+  Release: Config.xcconfig
+
+settings:
+  base:
+    SWIFT_VERSION: 5.9
+    MARKETING_VERSION: $(inherited)
+    CURRENT_PROJECT_VERSION: $(inherited)
+    PRODUCT_NAME: $(TARGET_NAME)
+    ENABLE_HARDENED_RUNTIME: YES
+    CODE_SIGN_STYLE: $(inherited)
+    DEVELOPMENT_TEAM: $(inherited)
+
+packages:
+  RightClickHeroKit:
+    path: RightClickHeroKit
+
+targets:
+
+  # ------------------------------------------------------------------
+  # Main App
+  # ------------------------------------------------------------------
+  RightClickHero:
+    type: application
+    platform: macOS
+    sources:
+      - path: RightClickHero
+        excludes:
+          - "Resources/Info.plist"
+          - "Resources/*.entitlements"
+    info:
+      path: RightClickHero/Resources/Info.plist
+    entitlements:
+      path: RightClickHero/Resources/RightClickHero.entitlements
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: $(APP_BUNDLE_ID)
+        INFOPLIST_FILE: RightClickHero/Resources/Info.plist
+        CODE_SIGN_ENTITLEMENTS: RightClickHero/Resources/RightClickHero.entitlements
+        LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/../Frameworks"
+        ENABLE_APP_SANDBOX: YES
+    dependencies:
+      - target: RightClickHeroFinderExt
+        embed: true
+        codeSign: true
+      - target: RightClickHeroHelper
+        embed: false
+        copy:
+          destination: wrapper
+          subpath: Contents/Library/LoginItems
+      - package: RightClickHeroKit
+    postBuildScripts: []
+
+  # ------------------------------------------------------------------
+  # Finder Sync Extension (.appex)
+  # ------------------------------------------------------------------
+  RightClickHeroFinderExt:
+    type: app-extension
+    platform: macOS
+    sources:
+      - path: RightClickHeroFinderExt
+        excludes:
+          - "Info.plist"
+          - "*.entitlements"
+    info:
+      path: RightClickHeroFinderExt/Info.plist
+    entitlements:
+      path: RightClickHeroFinderExt/RightClickHeroFinderExt.entitlements
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: $(FINDEREXT_BUNDLE_ID)
+        INFOPLIST_FILE: RightClickHeroFinderExt/Info.plist
+        CODE_SIGN_ENTITLEMENTS: RightClickHeroFinderExt/RightClickHeroFinderExt.entitlements
+        LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/../../../../Frameworks"
+        SKIP_INSTALL: YES
+    dependencies:
+      - package: RightClickHeroKit
+
+  # ------------------------------------------------------------------
+  # XPC Helper — built as a background-only .app, embedded in main app
+  # at Contents/Library/LoginItems for SMAppService.loginItem registration.
+  # ------------------------------------------------------------------
+  RightClickHeroHelper:
+    type: application
+    platform: macOS
+    sources:
+      - path: RightClickHeroHelper
+        excludes:
+          - "Info.plist"
+          - "*.entitlements"
+    info:
+      path: RightClickHeroHelper/Info.plist
+    entitlements:
+      path: RightClickHeroHelper/RightClickHeroHelper.entitlements
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: $(HELPER_BUNDLE_ID)
+        INFOPLIST_FILE: RightClickHeroHelper/Info.plist
+        CODE_SIGN_ENTITLEMENTS: RightClickHeroHelper/RightClickHeroHelper.entitlements
+        LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/../Frameworks"
+        SKIP_INSTALL: YES
+    dependencies:
+      - package: RightClickHeroKit
+
+schemes:
+  RightClickHero:
+    build:
+      targets:
+        RightClickHero: all
+    run:
+      config: Debug
+    archive:
+      config: Release
+    profile:
+      config: Release
+    analyze:
+      config: Debug

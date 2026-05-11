@@ -1,0 +1,33 @@
+// Single source of truth for project-wide identifiers.
+// Override BUNDLE_PREFIX from the command line:
+//     xcodebuild ... BUNDLE_PREFIX=com.example
+//
+// Or via the Makefile:
+//     make install BUNDLE_PREFIX=com.example
+
+BUNDLE_PREFIX = com.smopig
+
+// Stable identifiers derived from BUNDLE_PREFIX.
+// These are referenced from project.yml and from every Info.plist / entitlements file.
+APP_BUNDLE_ID           = $(BUNDLE_PREFIX).RightClickHero
+FINDEREXT_BUNDLE_ID     = $(BUNDLE_PREFIX).RightClickHero.FinderExt
+HELPER_BUNDLE_ID        = $(BUNDLE_PREFIX).RightClickHero.Helper
+APP_GROUP_ID            = group.$(BUNDLE_PREFIX).rightclickhero
+
+// Versioning
+MARKETING_VERSION         = 1.0.0
+CURRENT_PROJECT_VERSION   = 1
+
+// Deployment
+MACOSX_DEPLOYMENT_TARGET  = 12.0
+SWIFT_VERSION             = 5.9
+
+// Code signing.
+// Default to local development signing so `make install` works on a single Mac
+// without any Developer ID setup. Override CODE_SIGN_IDENTITY / DEVELOPMENT_TEAM
+// in CI or for distribution builds.
+CODE_SIGN_STYLE      = Automatic
+CODE_SIGN_IDENTITY   = Apple Development
+// DEVELOPMENT_TEAM is filled in by `make` from the user's Xcode session,
+// or supplied explicitly via `make install TEAM_ID=XXXXXXXXXX`.
+DEVELOPMENT_TEAM     =

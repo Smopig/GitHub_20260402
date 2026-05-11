@@ -213,7 +213,7 @@ import RightClickHeroKit
     private func handleAirDrop(_ req: ActionRequest) -> ActionResult {
         // Notify the main app via Darwin notification to present the AirDrop picker.
         DistributedNotificationCenter.default().postNotificationName(
-            NSNotification.Name("com.yourco.rightclickhero.showAirDrop"),
+            NSNotification.Name(BundleConfig.airDropNotificationName),
             object: nil,
             userInfo: nil,
             deliverImmediately: true
