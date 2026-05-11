@@ -62,7 +62,26 @@ help:
 
 check-tools:
 	@command -v xcodebuild >/dev/null 2>&1 || { \
-	  echo "error: xcodebuild not found. Install Xcode from the App Store, then run 'xcode-select --install'."; exit 1; }
+	  echo "error: xcodebuild not found. Install Xcode from the App Store first."; exit 1; }
+	@# Detect "Command Line Tools only" — xcodebuild won't actually work in that case.
+	@DEVDIR=$$(xcode-select -p 2>/dev/null); \
+	if [ "$$DEVDIR" = "/Library/Developer/CommandLineTools" ] || \
+	   ! xcodebuild -version >/dev/null 2>&1; then \
+	  echo ""; \
+	  echo "error: 'xcodebuild' requires the full Xcode.app, not just Command Line Tools."; \
+	  echo "       Current developer directory: $$DEVDIR"; \
+	  echo ""; \
+	  echo "Fix:"; \
+	  echo "  1. Install Xcode from the App Store:"; \
+	  echo "     open 'macappstore://itunes.apple.com/app/id497799835'"; \
+	  echo "  2. Point xcode-select at it:"; \
+	  echo "     sudo xcode-select -s /Applications/Xcode.app/Contents/Developer"; \
+	  echo "  3. Accept the license once:"; \
+	  echo "     sudo xcodebuild -license accept"; \
+	  echo "  4. Re-run: make install"; \
+	  echo ""; \
+	  exit 1; \
+	fi
 	@command -v xcodegen >/dev/null 2>&1 || { \
 	  echo "XcodeGen not found — installing via Homebrew..."; \
 	  command -v brew >/dev/null 2>&1 || { echo "Install Homebrew first: https://brew.sh"; exit 1; }; \
@@ -87,8 +106,8 @@ archive: project
 	  archive
 
 # ExportOptions for a "local development" build — no Developer ID required.
-$(BUILD_DIR)/ExportOptions.plist: | $(BUILD_DIR)
-	@/usr/libexec/PlistBuddy -c "Clear dict" $@ 2>/dev/null || true
+$(BUILD_DIR)/ExportOptions.plist:
+	@mkdir -p $(BUILD_DIR)
 	@printf '%s\n' \
 	  '<?xml version="1.0" encoding="UTF-8"?>' \
 	  '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">' \
@@ -98,9 +117,6 @@ $(BUILD_DIR)/ExportOptions.plist: | $(BUILD_DIR)
 	  '  <key>destination</key><string>export</string>' \
 	  '  <key>stripSwiftSymbols</key><true/>' \
 	  '</dict></plist>' > $@
-
-$(BUILD_DIR):
-	@mkdir -p $@
 
 export: archive $(BUILD_DIR)/ExportOptions.plist
 	@rm -rf $(EXPORT_DIR)
