@@ -82,6 +82,18 @@ check-tools:
 	  echo ""; \
 	  exit 1; \
 	fi
+	@# Verify xcodebuild can actually run (catches missing first-launch components).
+	@if ! xcodebuild -showsdks >/dev/null 2>&1; then \
+	  echo ""; \
+	  echo "error: xcodebuild can't load required system components (likely a fresh Xcode install)."; \
+	  echo ""; \
+	  echo "Fix (one-time):"; \
+	  echo "  sudo xcodebuild -runFirstLaunch"; \
+	  echo ""; \
+	  echo "Then re-run: make install"; \
+	  echo ""; \
+	  exit 1; \
+	fi
 	@command -v xcodegen >/dev/null 2>&1 || { \
 	  echo "XcodeGen not found — installing via Homebrew..."; \
 	  command -v brew >/dev/null 2>&1 || { echo "Install Homebrew first: https://brew.sh"; exit 1; }; \
