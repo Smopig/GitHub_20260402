@@ -27,10 +27,22 @@ INSTALL_DIR    := /Applications
 BUNDLE_PREFIX  ?=
 TEAM_ID        ?=
 
+# Auto-detect a Development Team ID from the user's keychain if TEAM_ID wasn't
+# given. This finds e.g. an "Apple Development: foo@bar.com (ABCDE12345)" cert
+# created when the user signed into Xcode with any Apple ID (free or paid).
+ifeq ($(strip $(TEAM_ID)),)
+  TEAM_ID := $(shell security find-identity -v -p codesigning 2>/dev/null \
+              | grep -E "Apple Development|Mac Developer" \
+              | head -n1 \
+              | sed -E 's/.*\(([A-Z0-9]{10})\).*/\1/' \
+              | grep -E '^[A-Z0-9]{10}$$')
+endif
+
 XCODEBUILD_ARGS := -project $(PROJECT_NAME).xcodeproj \
                    -scheme $(SCHEME) \
                    -configuration $(CONFIG) \
                    -derivedDataPath $(DERIVED_DIR) \
+                   -allowProvisioningUpdates \
                    COMPILER_INDEX_STORE_ENABLE=NO
 ifneq ($(strip $(BUNDLE_PREFIX)),)
   XCODEBUILD_ARGS += BUNDLE_PREFIX=$(BUNDLE_PREFIX)
@@ -39,7 +51,7 @@ ifneq ($(strip $(TEAM_ID)),)
   XCODEBUILD_ARGS += DEVELOPMENT_TEAM=$(TEAM_ID)
 endif
 
-.PHONY: help all check-tools project build archive export dmg install uninstall enable-extension clean reset
+.PHONY: help all check-tools check-team project build archive export dmg install uninstall enable-extension clean reset
 
 help:
 	@echo "RightClickHero build targets:"
@@ -111,7 +123,30 @@ project: check-tools
 build: project
 	xcodebuild $(XCODEBUILD_ARGS) -configuration Debug build
 
-archive: project
+check-team:
+	@if [ -z "$(strip $(TEAM_ID))" ]; then \
+	  echo ""; \
+	  echo "error: no Apple Development Team ID found in your keychain."; \
+	  echo ""; \
+	  echo "Code signing is required for Finder Sync Extensions + Login Item Helpers."; \
+	  echo "macOS will refuse to load them otherwise — no tool can bypass this."; \
+	  echo ""; \
+	  echo "One-time setup (free Apple ID is fine, no paid Developer Program needed):"; \
+	  echo "  1. Open Xcode"; \
+	  echo "  2. Xcode → Settings → Accounts → '+' → Add Apple ID, sign in"; \
+	  echo "  3. Close Xcode, then re-run: make install"; \
+	  echo ""; \
+	  echo "Or supply a Team ID explicitly:"; \
+	  echo "  make install TEAM_ID=ABCDE12345"; \
+	  echo ""; \
+	  echo "Available signing identities on this machine:"; \
+	  security find-identity -v -p codesigning 2>/dev/null | sed 's/^/  /' || true; \
+	  echo ""; \
+	  exit 1; \
+	fi
+	@echo "Using Apple Development Team: $(TEAM_ID)"
+
+archive: project check-team
 	@mkdir -p $(BUILD_DIR)
 	xcodebuild $(XCODEBUILD_ARGS) \
 	  -archivePath $(ARCHIVE_PATH) \
